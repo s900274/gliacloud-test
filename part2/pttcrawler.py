@@ -27,7 +27,10 @@ def fetchUrlList(kanban, pages):
             articleInfo['title'] = title.get_text()
             articleInfo['kanban'] = kanban
             articleInfo['content'] = ''
-            articleInfo['url'] = "https://www.ptt.cc"+article.find('a')['href']
+            try:
+                articleInfo['url'] = "https://www.ptt.cc"+article.find('a')['href']
+            except:
+                continue
 
             articlesList.append(articleInfo)
 
@@ -41,16 +44,21 @@ def fetchContent(articles):
 
     session = requests.Session()
 
-    for article in articles:
+    for idx, article in enumerate(articles):
         response = session.get(article['url'], cookies={'over18': '1'})
 
         bsObj = BeautifulSoup(response.text, "html.parser")
 
-        metas = bsObj.findAll("div", {"class": "main-content"}, text=True, recursive=False) 
+        metas = bsObj.find("div", {"class": "main-content"}, recursive=False) 
 
-        content = metas[0].get_text()
+        try:
+            content = metas.get_text()
 
-        articles['content'] = content
+            articles[idx]['content'] = content
+        except:
+            articles[idx]['content'] = ''
+
+    return articlesList
 
 articlesList = fetchUrlList('Gossiping', 2)
 articlesList = fetchContent(articlesList)
